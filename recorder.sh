@@ -8,7 +8,6 @@ STREAM_URL="${STREAM_URL:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-./recordings}"
 SEGMENT_DURATION="${SEGMENT_DURATION:-3600}" # in seconds
 LOG_FILE="${LOG_FILE:-/tmp/radio_recording.log}"
-PID_FILE="${PID_FILE:-/tmp//radio_recording.pid}"
 RETRY_DELAY="${RETRY_DELAY:-5}" # seconds
 
 # ===========================
@@ -29,7 +28,6 @@ OPTIONS:
     --output-dir DIR     Output directory (default: ./recordings)
     --segment-time SEC   Segment duration in seconds (default: 3600)
     --log-file FILE      Log file (default: ./radio_recording.log)
-    --pid-file FILE      PID file (default: ./radio_recording.pid)
     --retry-delay SEC    Delay between retries in seconds (default: 5)
     --help               Show this help
 
@@ -38,7 +36,6 @@ ENV VARIABLES:
     OUTPUT_DIR
     SEGMENT_DURATION
     LOG_FILE
-    PID_FILE
     RETRY_DELAY
 
 EXAMPLES:
@@ -66,10 +63,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --log-file)
             LOG_FILE="$2"
-            shift 2
-            ;;
-        --pid-file)
-            PID_FILE="$2"
             shift 2
             ;;
         --retry-delay)
@@ -110,25 +103,11 @@ log() {
 # ===========================
 cleanup() {
     log "Stopping recording..."
-    if [[ -n "$FFMPEG_PID" ]] && kill -0 "$FFMPEG_PID" 2>/dev/null; then
-        kill "$FFMPEG_PID"
-        wait "$FFMPEG_PID"
-    fi
-    rm -f "$PID_FILE"
     log "Script stopped"
     exit 0
 }
 
 trap cleanup SIGINT SIGTERM SIGQUIT
-
-# ===========================
-# Single instance check
-# ===========================
-if [[ -f "$PID_FILE" ]] && kill -0 $(cat "$PID_FILE") 2>/dev/null; then
-    echo "Script already running (PID: $(cat "$PID_FILE"))"
-    exit 1
-fi
-echo $$ > "$PID_FILE"
 
 # ===========================
 # Prepare output
