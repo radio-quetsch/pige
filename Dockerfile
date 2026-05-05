@@ -1,4 +1,4 @@
-FROM alpine:3.22 AS base
+FROM alpine:3.23 AS base
 
 RUN apk update  \
     && apk upgrade \
@@ -20,8 +20,8 @@ ENTRYPOINT ["/usr/local/bin/recorder.sh"]
 
 FROM base AS supercronic
 
-ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.34/supercronic-linux-amd64 \
-    SUPERCRONIC_SHA1SUM=e8631edc1775000d119b70fd40339a7238eece14 \
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.45/supercronic-linux-amd64 \
+    SUPERCRONIC_SHA1SUM=e894b193bea75a5ee644e700c59e30eedc804cf7 \
     SUPERCRONIC=supercronic-linux-amd64
 
 RUN apk add --no-cache --upgrade \
