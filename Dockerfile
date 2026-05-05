@@ -41,7 +41,5 @@ COPY --chmod=0755 purger.sh /usr/local/bin/
 COPY --from=supercronic /usr/local/bin/supercronic /usr/local/bin/
 COPY --chmod=0755 purger-entrypoint.sh /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-# ENTRYPOINT echo "${PURGE_SCHEDULE} /usr/local/bin/purger.sh" > /tmp/crontab && \
-          #  supercronic /tmp/crontab
 
 
