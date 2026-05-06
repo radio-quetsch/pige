@@ -1,0 +1,33 @@
+name: Build_Test
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+  push:
+    branches:
+      - '*'
+      - '!main'
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    name: Test build docker image (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [recorder, purger]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Build docker image
+        run: docker build --target ${{ matrix.target }} -f Dockerfile .
