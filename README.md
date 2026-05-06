@@ -11,8 +11,8 @@ Records radio streams 24/7 with automatic reconnection and file segmentation.
 
 ```bash
 # Build
-docker build --network host --target recorder -t pige-recorder .
-docker build --network host --target purger -t pige-purger .
+docker build --network host --format docker --target recorder -t pige-recorder .
+docker build --network host --format docker --target purger -t pige-purger .
 ```
 
 ## Usage
