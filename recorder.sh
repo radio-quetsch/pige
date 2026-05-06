@@ -7,7 +7,7 @@ set -e
 STREAM_URL="${STREAM_URL:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-./recordings}"
 SEGMENT_DURATION="${SEGMENT_DURATION:-3600}" # in seconds
-LOG_FILE="${LOG_FILE:-/tmp/radio_recording.log}"
+LOG_FILE="${LOG_FILE:-}"
 RETRY_DELAY="${RETRY_DELAY:-5}" # seconds
 HEALTHCHECK_URL="${HEALTHCHECK_URL:-}"
 HEALTHCHECK_INTERVAL="${HEALTHCHECK_INTERVAL:-60}" # seconds
@@ -30,7 +30,7 @@ ARGUMENTS:
 OPTIONS:
     --output-dir DIR         Output directory (default: ./recordings)
     --segment-time SEC       Segment duration in seconds (default: 3600)
-    --log-file FILE          Log file (default: ./radio_recording.log)
+    --log-file FILE          Log file (optional, stdout only if not set)
     --retry-delay SEC        Delay between retries in seconds (default: 5)
     --healthcheck-url URL    URL to ping periodically (Uptime Kuma, healthchecks.io, etc.)
     --healthcheck-interval   Ping interval in seconds (default: 60)
@@ -117,7 +117,12 @@ fi
 # Logging
 # ===========================
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    local msg="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+    if [[ -n "$LOG_FILE" ]]; then
+        echo "$msg" >> "$LOG_FILE"
+    else
+        echo "$msg"
+    fi
 }
 
 # ===========================

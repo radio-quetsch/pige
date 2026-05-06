@@ -43,7 +43,7 @@ docker run -d \
 | `STREAM_URL` | positional | — | Stream URL (required) |
 | `OUTPUT_DIR` | `--output-dir` | `./recordings` | Output directory |
 | `SEGMENT_DURATION` | `--segment-time` | `3600` | Segment length in seconds |
-| `LOG_FILE` | `--log-file` | `/tmp/radio_recording.log` | Log file path |
+| `LOG_FILE` | `--log-file` | — | Log file path (stdout only if not set) |
 | `RETRY_DELAY` | `--retry-delay` | `5` | Retry delay on error (seconds) |
 | `FFMPEG_STATS` | `--ffmpeg-stats` | `false` | Enable ffmpeg progress output |
 | `HEALTHCHECK_URL` | `--healthcheck-url` | — | URL to ping (Uptime Kuma, healthchecks.io…) |
