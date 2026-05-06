@@ -178,13 +178,14 @@ fi
 while true; do
     log "Recording to: ${OUTPUT_DIR}/$(date '+%Y-%m-%d_%H-%M-%S').mp3"
 
-    ffmpeg_opts=()
-    [[ "$FFMPEG_STATS" != "true" ]] && ffmpeg_opts+=("-nostats")
-    [[ "$ALIGN_TO_CLOCK" == "true" ]] && ffmpeg_opts+=("-segment_atclocktime" "1")
+    ffmpeg_input_opts=()
+    ffmpeg_output_opts=()
+    [[ "$FFMPEG_STATS" != "true" ]] && ffmpeg_input_opts+=("-nostats")
+    [[ "$ALIGN_TO_CLOCK" == "true" ]] && ffmpeg_output_opts+=("-segment_atclocktime" "1")
 
     ffmpeg_exit=0
     ffmpeg -y \
-        "${ffmpeg_opts[@]}" \
+        "${ffmpeg_input_opts[@]}" \
         -reconnect 1 \
         -reconnect_streamed 1 \
         -reconnect_delay_max 30 \
@@ -198,6 +199,7 @@ while true; do
         -write_empty_segments 1 \
         -avoid_negative_ts make_zero \
         -c:a copy \
+        "${ffmpeg_output_opts[@]}" \
         "${OUTPUT_DIR}/%Y-%m-%d_%H-%M-%S.mp3" || ffmpeg_exit=$?
     if [[ $ffmpeg_exit -eq 0 ]]; then
         log "Recording session finished"
