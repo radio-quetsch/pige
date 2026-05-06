@@ -46,6 +46,7 @@ docker run -d \
 | `LOG_FILE` | `--log-file` | — | Log file path (stdout only if not set) |
 | `RETRY_DELAY` | `--retry-delay` | `5` | Retry delay on error (seconds) |
 | `FFMPEG_STATS` | `--ffmpeg-stats` | `false` | Enable ffmpeg progress output |
+| `ALIGN_TO_CLOCK` | `--align-to-clock` | `false` | Align segment boundaries to clock time (e.g. 3600s → cuts at HH:00:00) |
 | `HEALTHCHECK_URL` | `--healthcheck-url` | — | URL to ping (Uptime Kuma, healthchecks.io…) |
 | `HEALTHCHECK_INTERVAL` | `--healthcheck-interval` | `60` | Ping interval in seconds |
 
