@@ -16,7 +16,7 @@ RUN apk add --no-cache --upgrade \
 
 VOLUME /recordings
 
-HEALTHCHECK --interval=60s --timeout=5s --retries=3 \
+HEALTHCHECK --interval=60s --timeout=5s --start-period=30s --retries=3 \
     CMD healthcheck.sh --check
 
 ENTRYPOINT ["/usr/local/bin/recorder.sh"]
