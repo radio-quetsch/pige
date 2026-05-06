@@ -8,13 +8,16 @@ RUN apk update  \
 
 FROM base AS recorder
 
-COPY --chmod=0755 recorder.sh /usr/local/bin/
+COPY --chmod=0755 recorder.sh healthcheck.sh /usr/local/bin/
 
 RUN apk add --no-cache --upgrade \
       ffmpeg \
     && rm -rf /tmp/* /var/cache/apk/*
 
 VOLUME /recordings
+
+HEALTHCHECK --interval=60s --timeout=5s --retries=3 \
+    CMD healthcheck.sh --check
 
 ENTRYPOINT ["/usr/local/bin/recorder.sh"]
 
