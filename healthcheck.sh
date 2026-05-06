@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 OUTPUT_DIR="${OUTPUT_DIR:-./recordings}"
 HEALTHCHECK_URL="${HEALTHCHECK_URL:-}"
