@@ -168,10 +168,7 @@ fi
 # Recording loop
 # ===========================
 while true; do
-    timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
-    output_file="${OUTPUT_DIR}/${timestamp}.mp3"
-
-    log "Recording to: $output_file"
+    log "Recording to: ${OUTPUT_DIR}/$(date '+%Y-%m-%d_%H-%M-%S').mp3"
 
     ffmpeg_opts=()
     [[ "$FFMPEG_STATS" != "true" ]] && ffmpeg_opts+=("-nostats")
@@ -194,7 +191,7 @@ while true; do
         -c:a copy \
         "${OUTPUT_DIR}/%Y-%m-%d_%H-%M-%S.mp3" || ffmpeg_exit=$?
     if [[ $ffmpeg_exit -eq 0 ]]; then
-        log "Segment finished successfully: $output_file"
+        log "Recording session finished"
     elif [[ $ffmpeg_exit -eq 130 ]]; then
         log "Interrupted by user"
         cleanup
