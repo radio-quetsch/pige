@@ -12,6 +12,7 @@ RETRY_DELAY="${RETRY_DELAY:-5}" # seconds
 HEALTHCHECK_URL="${HEALTHCHECK_URL:-}"
 HEALTHCHECK_INTERVAL="${HEALTHCHECK_INTERVAL:-60}" # seconds
 FFMPEG_STATS="${FFMPEG_STATS:-false}"
+ALIGN_TO_CLOCK="${ALIGN_TO_CLOCK:-false}"
 
 # ===========================
 # Help function
@@ -35,6 +36,7 @@ OPTIONS:
     --healthcheck-url URL    URL to ping periodically (Uptime Kuma, healthchecks.io, etc.)
     --healthcheck-interval   Ping interval in seconds (default: 60)
     --ffmpeg-stats           Enable ffmpeg progress stats output (disabled by default)
+    --align-to-clock         Align segment boundaries to clock time (e.g. 3600s → cuts at HH:00:00)
     --help                   Show this help
 
 ENV VARIABLES:
@@ -46,6 +48,7 @@ ENV VARIABLES:
     HEALTHCHECK_URL
     HEALTHCHECK_INTERVAL
     FFMPEG_STATS             Set to true to enable ffmpeg stats (default: false)
+    ALIGN_TO_CLOCK           Set to true to align segments to clock boundaries (default: false)
 
 EXAMPLES:
     $0 http://stream.radio.com/live.mp3
@@ -89,6 +92,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --ffmpeg-stats)
             FFMPEG_STATS="true"
+            shift
+            ;;
+        --align-to-clock)
+            ALIGN_TO_CLOCK="true"
             shift
             ;;
         --*)
@@ -147,6 +154,7 @@ log "Starting radio recording..."
 log "Stream URL: $STREAM_URL"
 log "Output dir: $OUTPUT_DIR"
 log "Segment duration: ${SEGMENT_DURATION}s"
+log "Align to clock: ${ALIGN_TO_CLOCK}"
 log "Retry delay: ${RETRY_DELAY}s"
 
 # ===========================
@@ -172,6 +180,7 @@ while true; do
 
     ffmpeg_opts=()
     [[ "$FFMPEG_STATS" != "true" ]] && ffmpeg_opts+=("-nostats")
+    [[ "$ALIGN_TO_CLOCK" == "true" ]] && ffmpeg_opts+=("-segment_atclocktime" "1")
 
     ffmpeg_exit=0
     ffmpeg -y \
