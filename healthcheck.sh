@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 OUTPUT_DIR="${OUTPUT_DIR:-./recordings}"
