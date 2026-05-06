@@ -49,12 +49,12 @@ ping_heartbeat() {
         || log "ping failed (wget error)"
 }
 
-# Send first ping immediately, then every HEALTHCHECK_INTERVAL seconds
-# using deadline-based sleep to prevent drift accumulation
-check_recording && ping_heartbeat
+# Send first ping immediately, then every HEALTHCHECK_INTERVAL seconds.
+# Elapsed work time is subtracted from sleep so the ping interval stays accurate.
 while true; do
-    deadline=$(( $(date +%s) + HEALTHCHECK_INTERVAL ))
-    now=$(date +%s)
-    (( deadline > now )) && sleep $(( deadline - now ))
+    start=$(date +%s)
     check_recording && ping_heartbeat
+    elapsed=$(( $(date +%s) - start ))
+    remaining=$(( HEALTHCHECK_INTERVAL - elapsed ))
+    (( remaining > 0 )) && sleep $remaining
 done
