@@ -176,6 +176,7 @@ while true; do
     ffmpeg_opts=()
     [[ "$FFMPEG_STATS" != "true" ]] && ffmpeg_opts+=("-nostats")
 
+    ffmpeg_exit=0
     ffmpeg -y \
         "${ffmpeg_opts[@]}" \
         -reconnect 1 \
@@ -191,9 +192,7 @@ while true; do
         -write_empty_segments 1 \
         -avoid_negative_ts make_zero \
         -c:a copy \
-        "${OUTPUT_DIR}/%Y-%m-%d_%H-%M-%S.mp3"
-
-    ffmpeg_exit=$?
+        "${OUTPUT_DIR}/%Y-%m-%d_%H-%M-%S.mp3" || ffmpeg_exit=$?
     if [[ $ffmpeg_exit -eq 0 ]]; then
         log "Segment finished successfully: $output_file"
     elif [[ $ffmpeg_exit -eq 130 ]]; then
