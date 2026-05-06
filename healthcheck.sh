@@ -42,11 +42,19 @@ if [[ "${1:-}" == "--check" ]]; then
 fi
 
 # Loop mode: started as background process by recorder.sh
+ping_heartbeat() {
+    [[ -z "$HEALTHCHECK_URL" ]] && return
+    wget -qO- "$HEALTHCHECK_URL" > /dev/null 2>&1 \
+        && log "ping sent" \
+        || log "ping failed (wget error)"
+}
+
+# Send first ping immediately, then every HEALTHCHECK_INTERVAL seconds
+# using deadline-based sleep to prevent drift accumulation
+check_recording && ping_heartbeat
 while true; do
-    sleep "$HEALTHCHECK_INTERVAL"
-    if check_recording && [[ -n "$HEALTHCHECK_URL" ]]; then
-        wget -qO- "$HEALTHCHECK_URL" > /dev/null 2>&1 \
-            && log "ping sent" \
-            || log "ping failed (wget error)"
-    fi
+    deadline=$(( $(date +%s) + HEALTHCHECK_INTERVAL ))
+    now=$(date +%s)
+    (( deadline > now )) && sleep $(( deadline - now ))
+    check_recording && ping_heartbeat
 done
