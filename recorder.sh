@@ -11,6 +11,7 @@ LOG_FILE="${LOG_FILE:-/tmp/radio_recording.log}"
 RETRY_DELAY="${RETRY_DELAY:-5}" # seconds
 HEALTHCHECK_URL="${HEALTHCHECK_URL:-}"
 HEALTHCHECK_INTERVAL="${HEALTHCHECK_INTERVAL:-60}" # seconds
+FFMPEG_STATS="${FFMPEG_STATS:-false}"
 
 # ===========================
 # Help function
@@ -33,6 +34,7 @@ OPTIONS:
     --retry-delay SEC        Delay between retries in seconds (default: 5)
     --healthcheck-url URL    URL to ping periodically (Uptime Kuma, healthchecks.io, etc.)
     --healthcheck-interval   Ping interval in seconds (default: 60)
+    --ffmpeg-stats           Enable ffmpeg progress stats output (disabled by default)
     --help                   Show this help
 
 ENV VARIABLES:
@@ -43,6 +45,7 @@ ENV VARIABLES:
     RETRY_DELAY
     HEALTHCHECK_URL
     HEALTHCHECK_INTERVAL
+    FFMPEG_STATS             Set to true to enable ffmpeg stats (default: false)
 
 EXAMPLES:
     $0 http://stream.radio.com/live.mp3
@@ -83,6 +86,10 @@ while [[ $# -gt 0 ]]; do
         --healthcheck-interval)
             HEALTHCHECK_INTERVAL="$2"
             shift 2
+            ;;
+        --ffmpeg-stats)
+            FFMPEG_STATS="true"
+            shift
             ;;
         --*)
             echo "Unknown option: $1"
@@ -161,7 +168,11 @@ while true; do
 
     log "Recording to: $output_file"
 
+    ffmpeg_opts=()
+    [[ "$FFMPEG_STATS" != "true" ]] && ffmpeg_opts+=("-nostats")
+
     ffmpeg -y \
+        "${ffmpeg_opts[@]}" \
         -reconnect 1 \
         -reconnect_streamed 1 \
         -reconnect_delay_max 30 \
