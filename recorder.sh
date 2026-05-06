@@ -9,6 +9,8 @@ OUTPUT_DIR="${OUTPUT_DIR:-./recordings}"
 SEGMENT_DURATION="${SEGMENT_DURATION:-3600}" # in seconds
 LOG_FILE="${LOG_FILE:-/tmp/radio_recording.log}"
 RETRY_DELAY="${RETRY_DELAY:-5}" # seconds
+HEALTHCHECK_URL="${HEALTHCHECK_URL:-}"
+HEALTHCHECK_INTERVAL="${HEALTHCHECK_INTERVAL:-60}" # seconds
 
 # ===========================
 # Help function
@@ -25,11 +27,13 @@ ARGUMENTS:
     STREAM_URL           Audio stream URL to record
 
 OPTIONS:
-    --output-dir DIR     Output directory (default: ./recordings)
-    --segment-time SEC   Segment duration in seconds (default: 3600)
-    --log-file FILE      Log file (default: ./radio_recording.log)
-    --retry-delay SEC    Delay between retries in seconds (default: 5)
-    --help               Show this help
+    --output-dir DIR         Output directory (default: ./recordings)
+    --segment-time SEC       Segment duration in seconds (default: 3600)
+    --log-file FILE          Log file (default: ./radio_recording.log)
+    --retry-delay SEC        Delay between retries in seconds (default: 5)
+    --healthcheck-url URL    URL to ping periodically (Uptime Kuma, healthchecks.io, etc.)
+    --healthcheck-interval   Ping interval in seconds (default: 60)
+    --help                   Show this help
 
 ENV VARIABLES:
     STREAM_URL
@@ -37,10 +41,13 @@ ENV VARIABLES:
     SEGMENT_DURATION
     LOG_FILE
     RETRY_DELAY
+    HEALTHCHECK_URL
+    HEALTHCHECK_INTERVAL
 
 EXAMPLES:
     $0 http://stream.radio.com/live.mp3
     $0 --output-dir /tmp/recordings --segment-time 1800 http://stream.radio.com/live.mp3
+    $0 --healthcheck-url https://uptime.kuma.pet/api/push/<token>?status=up http://stream.radio.com/live.mp3
 EOF
 }
 
@@ -67,6 +74,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --retry-delay)
             RETRY_DELAY="$2"
+            shift 2
+            ;;
+        --healthcheck-url)
+            HEALTHCHECK_URL="$2"
+            shift 2
+            ;;
+        --healthcheck-interval)
+            HEALTHCHECK_INTERVAL="$2"
             shift 2
             ;;
         --*)
@@ -101,8 +116,11 @@ log() {
 # ===========================
 # Cleanup on exit
 # ===========================
+HEALTHCHECK_PID=""
+
 cleanup() {
     log "Stopping recording..."
+    [[ -n "$HEALTHCHECK_PID" ]] && kill "$HEALTHCHECK_PID" 2>/dev/null
     log "Script stopped"
     exit 0
 }
@@ -120,12 +138,27 @@ log "Segment duration: ${SEGMENT_DURATION}s"
 log "Retry delay: ${RETRY_DELAY}s"
 
 # ===========================
+# Healthcheck
+# ===========================
+_HC_SCRIPT="$(dirname "$(realpath "$0")")/healthcheck.sh"
+if [[ -x "$_HC_SCRIPT" ]]; then
+    log "Starting healthcheck (every ${HEALTHCHECK_INTERVAL}s)"
+    OUTPUT_DIR="$OUTPUT_DIR" \
+    HEALTHCHECK_URL="$HEALTHCHECK_URL" \
+    HEALTHCHECK_INTERVAL="$HEALTHCHECK_INTERVAL" \
+    "$_HC_SCRIPT" &
+    HEALTHCHECK_PID=$!
+else
+    log "Warning: healthcheck.sh not found or not executable at $_HC_SCRIPT"
+fi
+
+# ===========================
 # Recording loop
 # ===========================
 while true; do
     timestamp=$(date '+%Y-%m-%d_%H-%M-%S')
     output_file="${OUTPUT_DIR}/${timestamp}.mp3"
-    
+
     log "Recording to: $output_file"
 
     ffmpeg -y \
