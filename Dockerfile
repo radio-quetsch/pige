@@ -1,4 +1,4 @@
-FROM docker.io/alpine:3.23 AS base
+FROM docker.io/alpine:3.24 AS base
 
 RUN apk update  \
     && apk upgrade \
