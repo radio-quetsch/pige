@@ -21,27 +21,26 @@ HEALTHCHECK --interval=60s --timeout=5s --start-period=30s --retries=3 \
 
 ENTRYPOINT ["/usr/local/bin/recorder.sh"]
 
-FROM base AS supercronic
+# Build supercronic from source. The Go toolchain runs on the build platform
+# and cross-compiles for the target one, so no emulation is needed.
+FROM --platform=$BUILDPLATFORM docker.io/golang:1.27-alpine AS supercronic
+ARG TARGETOS
+ARG TARGETARCH
+# renovate: datasource=github-releases depName=aptible/supercronic
+ARG SUPERCRONIC_VERSION=v0.2.51
 
-ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.45/supercronic-linux-amd64 \
-    SUPERCRONIC_SHA1SUM=e894b193bea75a5ee644e700c59e30eedc804cf7 \
-    SUPERCRONIC=supercronic-linux-amd64
+# When cross-compiling, go install puts the binary in a GOOS_GOARCH subdirectory
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go install -trimpath -ldflags="-s -w -X main.Version=${SUPERCRONIC_VERSION}" github.com/aptible/supercronic@${SUPERCRONIC_VERSION} \
+    && mkdir /out \
+    && find /go/bin -type f -name supercronic -exec mv {} /out/supercronic \;
 
-RUN apk add --no-cache --upgrade \
-      curl 
-
-RUN curl -fsSLO "$SUPERCRONIC_URL" \
-    && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
-    && chmod +x "$SUPERCRONIC" \
-    && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
-    && cp "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
-
-FROM supercronic AS purger
+FROM base AS purger
 
 ENV PURGE_SCHEDULE="0 */6 * * *"
 
 COPY --chmod=0755 purger.sh /usr/local/bin/
-COPY --from=supercronic /usr/local/bin/supercronic /usr/local/bin/
+COPY --from=supercronic /out/supercronic /usr/local/bin/
 COPY --chmod=0755 purger-entrypoint.sh /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
