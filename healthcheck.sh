@@ -11,17 +11,24 @@ log() {
 
 check_recording() {
     local threshold=$(( $(date +%s) - HEALTHCHECK_INTERVAL * 2 ))
-    local latest_mtime=0 latest_file="" f mtime
-    while IFS= read -r f; do
-        mtime=$(stat -c '%Y' "$f" 2>/dev/null) || continue
-        if [[ $mtime -gt $latest_mtime ]]; then
-            latest_mtime=$mtime
-            latest_file=$f
-        fi
-    done < <(find "$OUTPUT_DIR" -name "*.mp3" -type f 2>/dev/null)
+    # File names start with the segment start time (%Y-%m-%d_%H-%M-%S), so the
+    # last name in byte order is the segment being written. Only that file is
+    # stat-ed: on a remote mount (rclone, S3) one stat per file takes seconds
+    # once the directory holds hundreds of recordings.
+    local LC_ALL=C latest_file latest_mtime
+    local -a files
+    shopt -s nullglob
+    files=("$OUTPUT_DIR"/*.mp3)
+    shopt -u nullglob
 
-    if [[ $latest_mtime -eq 0 ]]; then
+    if (( ${#files[@]} == 0 )); then
         log "no mp3 found in $OUTPUT_DIR"
+        return 1
+    fi
+
+    latest_file=${files[-1]}
+    if ! latest_mtime=$(stat -c '%Y' "$latest_file" 2>/dev/null); then
+        log "FAIL — cannot read ${latest_file##*/}"
         return 1
     fi
 

@@ -76,7 +76,7 @@ HEALTHCHECK_URL='https://uptime.kuma.pet/api/push/<token>?status=up&msg=OK'
 HEALTHCHECK_URL='https://hc-ping.com/<uuid>'
 ```
 
-A ping is only sent when a `.mp3` file has been written within the last `HEALTHCHECK_INTERVAL * 2` seconds. If ffmpeg crashes or the stream dies, pings stop and the monitor detects the outage after its own timeout.
+A ping is only sent when a `.mp3` file has been written within the last `HEALTHCHECK_INTERVAL * 2` seconds. The check only reads the newest file by name (names start with the segment start time), so it stays fast on a remote mount such as rclone over S3, whatever the number of recordings. If ffmpeg crashes or the stream dies, pings stop and the monitor detects the outage after its own timeout.
 
 ## Output
 
